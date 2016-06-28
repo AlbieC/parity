@@ -348,10 +348,8 @@ impl<V> Client<V> where V: Verifier {
 			}
 		}
 
-		{
-			if self.chain_info().best_block_hash != original_best {
-				self.miner.update_sealing(self);
-			}
+		if self.chain_info().best_block_hash != original_best {
+			self.miner.update_sealing(self);
 		}
 
 		imported
@@ -867,10 +865,8 @@ impl<V> MiningBlockChainClient for Client<V> where V: Verifier {
 			})).unwrap_or_else(|e| warn!("Error sending IO notification: {:?}", e));
 		}
 
-		{
-			if self.chain_info().best_block_hash != original_best {
-				self.miner.update_sealing(self);
-			}
+		if self.chain_info().best_block_hash != original_best {
+			self.miner.update_sealing(self);
 		}
 
 		info!("Block {} ({}) submitted and imported.", h.hex(), number);
