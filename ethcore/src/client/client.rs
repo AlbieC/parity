@@ -341,10 +341,8 @@ impl Client {
 			}
 		}
 
-		{
-			if self.chain_info().best_block_hash != original_best {
-				self.miner.update_sealing(self);
-			}
+		if self.chain_info().best_block_hash != original_best {
+			self.miner.update_sealing(self);
 		}
 
 		imported
@@ -860,10 +858,8 @@ impl MiningBlockChainClient for Client {
 			})).unwrap_or_else(|e| warn!("Error sending IO notification: {:?}", e));
 		}
 
-		{
-			if self.chain_info().best_block_hash != original_best {
-				self.miner.update_sealing(self);
-			}
+		if self.chain_info().best_block_hash != original_best {
+			self.miner.update_sealing(self);
 		}
 
 		info!("Block {} ({}) submitted and imported.", h.hex(), number);
