@@ -575,7 +575,6 @@ impl MinerService for Miner {
 	}
 
 	fn submit_seal(&self, chain: &MiningBlockChainClient, pow_hash: H256, seal: Vec<Bytes>) -> Result<(), Error> {
-		let mut sealed_block = None;
 		let result = if let Some(b) = self.sealing_work.lock().unwrap().take_used_if(|b| &b.hash() == &pow_hash) {
 			match b.lock().try_seal(self.engine(), seal) {
 				Err(_) => {
@@ -584,18 +583,17 @@ impl MinerService for Miner {
 				}
 				Ok(sealed) => {
 					info!(target: "miner", "New block mined, hash: {}", sealed.header().hash().hex());
-					sealed_block = Some(sealed);
-					Ok(())
+					Ok(sealed)
 				}
 			}
 		} else {
 			info!(target: "miner", "Mined block rejected, PoW hash invalid or out of date.");
 			Err(Error::PowHashInvalid)
 		};
-		if let Some(sealed) = sealed_block {
+		result.and_then(|sealed| {
 			try!(chain.import_sealed_block(sealed));
-		}
-		result
+			Ok(())
+		})
 	}
 
 	fn chain_new_blocks(&self, chain: &MiningBlockChainClient, _imported: &[H256], _invalid: &[H256], enacted: &[H256], retracted: &[H256]) {
