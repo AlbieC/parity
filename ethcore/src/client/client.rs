@@ -336,6 +336,7 @@ impl Client {
 					invalid: invalid_blocks,
 					enacted: enacted,
 					retracted: retracted,
+					sealed: Vec::new(),
 				})).unwrap_or_else(|e| warn!("Error sending IO notification: {:?}", e));
 			}
 		}
@@ -855,6 +856,7 @@ impl MiningBlockChainClient for Client {
 				invalid: vec![],
 				enacted: enacted,
 				retracted: retracted,
+				sealed: vec![h.clone()],
 			})).unwrap_or_else(|e| warn!("Error sending IO notification: {:?}", e));
 		}
 
