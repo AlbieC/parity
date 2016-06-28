@@ -304,7 +304,7 @@ impl Client {
 			let closed_block = closed_block.unwrap();
 			imported_blocks.push(header.hash());
 
-			let route = self.commit_block(closed_block, &block.bytes);
+			let route = self.commit_block(closed_block, &header.hash(), &block.bytes);
 			import_results.push(route);
 
 			self.report.write().unwrap().accrue_block(&block);
@@ -348,11 +348,11 @@ impl Client {
 		imported
 	}
 
-	fn commit_block<B>(&self, block: B, block_data: &Bytes) -> ImportRoute where B: IsBlock + Drain {
-		let header = block.header().clone();
+	fn commit_block<B>(&self, block: B, hash: &H256, block_data: &Bytes) -> ImportRoute where B: IsBlock + Drain {
+		let number = block.header().number();
 		// Are we committing an era?
-		let ancient = if header.number() >= HISTORY {
-			let n = header.number() - HISTORY;
+		let ancient = if number >= HISTORY {
+			let n = number - HISTORY;
 			Some((n, self.chain.block_hash(n).unwrap()))
 		} else {
 			None
@@ -362,15 +362,15 @@ impl Client {
 		let receipts = block.receipts().clone();
 		let traces = From::from(block.traces().clone().unwrap_or_else(Vec::new));
 
-		block.drain().commit(header.number(), &header.hash(), ancient).expect("State DB commit failed.");
+		block.drain().commit(number, hash, ancient).expect("State DB commit failed.");
 
 		// And update the chain after commit to prevent race conditions
 		// (when something is in chain but you are not able to fetch details)
 		let route = self.chain.insert_block(block_data, receipts);
 		self.tracedb.import(TraceImportRequest {
 			traces: traces,
-			block_hash: header.hash(),
-			block_number: header.number(),
+			block_hash: hash.clone(),
+			block_number: number,
 			enacted: route.enacted.clone(),
 			retracted: route.retracted.len()
 		});
@@ -842,7 +842,7 @@ impl MiningBlockChainClient for Client {
 		let number = block.header().number();
 
 		let block_data = block.rlp_bytes();
-		let route = self.commit_block(block, &block_data);
+		let route = self.commit_block(block, &h, &block_data);
 		trace!(target: "client", "Imported sealed block #{} ({})", number, h);
 
 		{
