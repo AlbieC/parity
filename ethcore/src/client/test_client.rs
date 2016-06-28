@@ -32,7 +32,7 @@ use miner::{Miner, MinerService};
 use spec::Spec;
 
 use block_queue::BlockQueueInfo;
-use block::OpenBlock;
+use block::{OpenBlock, SealedBlock};
 use executive::Executed;
 use error::{ExecutionError};
 use trace::LocalizedTrace;
@@ -242,6 +242,10 @@ impl TestBlockChainClient {
 
 impl MiningBlockChainClient for TestBlockChainClient {
 	fn prepare_open_block(&self, _author: Address, _gas_range_target: (U256, U256), _extra_data: Bytes) -> OpenBlock {
+		unimplemented!();
+	}
+
+	fn import_sealed_block(&self, _block: SealedBlock) -> ImportResult {
 		unimplemented!();
 	}
 }
