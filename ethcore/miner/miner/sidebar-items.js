@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["PendingSet","Different possible definitions for pending transaction set."]],"struct":[["Miner","Keeps track of transactions using priority queue and holds currently mined block."],["MinerOptions","Configures the behaviour of the miner."]]});
