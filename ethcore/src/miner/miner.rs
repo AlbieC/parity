@@ -19,6 +19,7 @@ use std::sync::atomic::AtomicBool;
 use std::time::{Instant, Duration};
 
 use util::*;
+use util::Colour::White;
 use account_provider::AccountProvider;
 use views::{BlockView, HeaderView};
 use client::{MiningBlockChainClient, Executive, Executed, EnvInfo, TransactOptions, BlockID, CallAnalytics};
@@ -592,20 +593,23 @@ impl MinerService for Miner {
 		let result = if let Some(b) = self.sealing_work.lock().unwrap().take_used_if(|b| &b.hash() == &pow_hash) {
 			match b.lock().try_seal(self.engine(), seal) {
 				Err(_) => {
-					info!(target: "miner", "Mined block rejected, PoW was invalid.");
+					info!(target: "miner", "Mined solution rejected: Invalid.");
 					Err(Error::PowInvalid)
 				}
 				Ok(sealed) => {
-					info!(target: "miner", "New block mined, hash: {}", sealed.header().hash().hex());
+					info!(target: "miner", "New solution received for #{}: {}", sealed.header().number(), sealed.header().hash());
 					Ok(sealed)
 				}
 			}
 		} else {
-			info!(target: "miner", "Mined block rejected, PoW hash invalid or out of date.");
+			info!(target: "miner", "Mined solution rejected: Block unknown or out of date.");
 			Err(Error::PowHashInvalid)
 		};
 		result.and_then(|sealed| {
+			let n = sealed.header().number();
+			let h = sealed.header().hash();
 			try!(chain.import_sealed_block(sealed));
+			info!("Mined block imported OK. #{}: {}", paint(White.bold(), format!("{}", n)), paint(White.bold(), h.hex()));
 			Ok(())
 		})
 	}
